@@ -37,6 +37,7 @@ func Build(ctx context.Context, configPath, closurePath, copyToRootPath string, 
 		Architecture: runtime.GOARCH,
 		OS:           runtime.GOOS,
 		BaseImage:    bOpts.FromImage,
+		ImageConfig:  configPath,
 	}
 	log.G(ctx).
 		WithField("arch", image.Architecture).

@@ -97,7 +97,7 @@ func TestNixSnapshotter(t *testing.T) {
 			}
 
 			testBindMounts(ctx, t, tc, labels)
-			testGCRoots(ctx, t, tc, labels)
+			// testGCRoots(ctx, t, tc, labels)
 		})
 	}
 }

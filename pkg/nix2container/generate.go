@@ -75,7 +75,8 @@ func Generate(ctx context.Context, image *types.Image, store content.Store) (des
 	}
 
 	layerDesc.Annotations = map[string]string{
-		NixLayerAnnotation: "true",
+		NixLayerAnnotation:                        "true",
+		"containerd.io/snapshot/nix-image-config": image.ImageConfig,
 	}
 	for i, nixStorePath := range image.NixStorePaths {
 		key := NixStorePrefixAnnotation + strconv.Itoa(i)

@@ -146,21 +146,36 @@ func (o *nixSnapshotter) prepareNixGCRoots(ctx context.Context, key string, labe
 	sort.Strings(sortedLabels)
 
 	gcRootsDir := filepath.Join(o.root, "gcroots", id)
-	log.G(ctx).Infof("[nix-snapshotter] Preparing %d nix gc roots at %s", len(sortedLabels), gcRootsDir)
+
 	for _, labelKey := range sortedLabels {
-		if !strings.HasPrefix(labelKey, nix2container.NixStorePrefixAnnotation) {
+		if labelKey != "containerd.io/snapshot/nix-image-config" {
 			continue
 		}
 
-		// nix build with a store path fetches a store path from the configured
-		// substituters, if it doesn't already exist.
 		nixStorePath := labels[labelKey]
 		outLink := filepath.Join(gcRootsDir, filepath.Base(nixStorePath))
+		log.G(ctx).Infof("[nix-snapshotter] Writing image nix gc root for %s at %s", nixStorePath, outLink)
 		err = o.nixBuilder(ctx, outLink, nixStorePath)
 		if err != nil {
 			return err
 		}
 	}
+
+	// log.G(ctx).Infof("[nix-snapshotter] Preparing %d nix gc roots at %s", len(sortedLabels), gcRootsDir)
+	// for _, labelKey := range sortedLabels {
+	// 	if !strings.HasPrefix(labelKey, nix2container.NixStorePrefixAnnotation) {
+	// 		continue
+	// 	}
+
+	// 	// nix build with a store path fetches a store path from the configured
+	// 	// substituters, if it doesn't already exist.
+	// 	nixStorePath := labels[labelKey]
+	// 	outLink := filepath.Join(gcRootsDir, filepath.Base(nixStorePath))
+	// 	err = o.nixBuilder(ctx, outLink, nixStorePath)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
 
 	return nil
 }
