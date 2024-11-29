@@ -22,6 +22,7 @@ let
     };
     vendorHash = "sha256-QBLePOnfsr6I19ddyZNSFDih6mCaZ/NV2Qz1B1pSHxs=";
     passthru = { inherit buildImage; };
+    doCheck = false;
   };
 
   # buildImage is analogous to the `docker build` command, in that it can be

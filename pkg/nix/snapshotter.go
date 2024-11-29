@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
 
 	"github.com/containerd/containerd/log"
 	"github.com/containerd/containerd/mount"
@@ -329,43 +328,30 @@ func (o *nixSnapshotter) withNixBindMounts(ctx context.Context, key string, moun
 
 	// Add a read only bind mount for every nix path required for the current
 	// snapshot and all its parents.
-	pathsSeen := make(map[string]struct{})
 	for currentKey := key; currentKey != ""; {
 		_, info, _, err := storage.GetInfo(ctx, currentKey)
 		if err != nil {
 			return nil, err
 		}
 
-		// Make the order of the bind mounts deterministic
-		sortedLabels := []string{}
 		for label := range info.Labels {
-			sortedLabels = append(sortedLabels, label)
-		}
-		sort.Strings(sortedLabels)
-
-		for _, labelKey := range sortedLabels {
-			if !strings.HasPrefix(labelKey, nix2container.NixStorePrefixAnnotation) {
-				continue
+			if label == "containerd.io/snapshot/nix-layer" {
+				// Bind mount entire /nix/store instead of individual store paths, as otherwise we run into extreme system slow downs
+				// when creating thousands of bind mounts.
+				// See also https://github.com/systemd/systemd/issues/31137
+				// Although this is not limited to systemd and the system slows down in general
+				log.G(ctx).Infof("[nix-snapshotter] Bind mounting nix store path %s", "/nix/store")
+				mounts = append(mounts, mount.Mount{
+					Type:   "bind",
+					Source: "/nix/store",
+					Target: "/nix/store",
+					Options: []string{
+						"ro",
+						"rbind",
+					},
+				})
+				break
 			}
-
-			// Avoid duplicate mounts.
-			nixStorePath := info.Labels[labelKey]
-			_, ok := pathsSeen[nixStorePath]
-			if ok {
-				continue
-			}
-			pathsSeen[nixStorePath] = struct{}{}
-
-			log.G(ctx).Debugf("[nix-snapshotter] Bind mounting nix store path %s", nixStorePath)
-			mounts = append(mounts, mount.Mount{
-				Type:   "bind",
-				Source: nixStorePath,
-				Target: nixStorePath,
-				Options: []string{
-					"ro",
-					"rbind",
-				},
-			})
 		}
 
 		currentKey = info.Parent
