@@ -27,7 +27,7 @@ func WithFromImage(fromImage string) BuildOpt {
 }
 
 // Build builds an image specification.
-func Build(ctx context.Context, configPath, closurePath, copyToRootPath string, opts ...BuildOpt) (*types.Image, error) {
+func Build(ctx context.Context, configPath, closurePath, outPath, copyToRootPath string, opts ...BuildOpt) (*types.Image, error) {
 	var bOpts BuildOpts
 	for _, opt := range opts {
 		opt(&bOpts)
@@ -37,7 +37,7 @@ func Build(ctx context.Context, configPath, closurePath, copyToRootPath string, 
 		Architecture: runtime.GOARCH,
 		OS:           runtime.GOOS,
 		BaseImage:    bOpts.FromImage,
-		ImageConfig:  configPath,
+		ImageOutPath: outPath,
 	}
 	log.G(ctx).
 		WithField("arch", image.Architecture).

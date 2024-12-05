@@ -58,6 +58,7 @@ var buildCommand = &cli.Command{
 		img, err := nix2container.Build(ctx,
 			c.String("config"),
 			c.String("closure"),
+			outPath,
 			c.String("copy-to-root"),
 			opts...,
 		)

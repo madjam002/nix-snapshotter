@@ -15,6 +15,7 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+
 	// "time"
 
 	"github.com/containerd/containerd/archive"
@@ -76,8 +77,8 @@ func Generate(ctx context.Context, image *types.Image, store content.Store, crea
 	}
 
 	layerDesc.Annotations = map[string]string{
-		NixLayerAnnotation:                        "true",
-		"containerd.io/snapshot/nix-image-config": image.ImageConfig,
+		NixLayerAnnotation:                    "true",
+		"containerd.io/snapshot/nix-out-path": image.ImageOutPath,
 	}
 	for i, nixStorePath := range image.NixStorePaths {
 		key := NixStorePrefixAnnotation + strconv.Itoa(i)

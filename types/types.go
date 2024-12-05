@@ -11,7 +11,7 @@ type Image struct {
 	OS            string              `json:"os"`
 	NixStorePaths []string            `json:"nix-store-paths,omitempty"`
 	CopyToRoots   []string            `json:"copy-to-roots,omitempty"`
-	ImageConfig   string              `json:"configPath"`
+	ImageOutPath  string              `json:"output-path"`
 }
 
 type OCIManifest struct {

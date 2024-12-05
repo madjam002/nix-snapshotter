@@ -147,7 +147,7 @@ func (o *nixSnapshotter) prepareNixGCRoots(ctx context.Context, key string, labe
 	gcRootsDir := filepath.Join(o.root, "gcroots", id)
 
 	for _, labelKey := range sortedLabels {
-		if labelKey != "containerd.io/snapshot/nix-image-config" {
+		if labelKey != "containerd.io/snapshot/nix-out-path" {
 			continue
 		}
 
