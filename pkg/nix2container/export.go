@@ -23,8 +23,8 @@ var (
 
 // Export writes an OCI archive to the writer using the provided nix image
 // spec.
-func Export(ctx context.Context, store content.Store, image *types.Image, ref string, w io.Writer) error {
-	desc, err := Generate(ctx, image, store)
+func Export(ctx context.Context, store content.Store, image *types.Image, ref string, w io.Writer, createRootCommand string) error {
+	desc, err := Generate(ctx, image, store, createRootCommand)
 	if err != nil {
 		return err
 	}

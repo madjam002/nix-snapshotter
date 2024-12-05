@@ -30,6 +30,10 @@ var buildCommand = &cli.Command{
 			Usage: "Path to a JSON describing copy to root config",
 		},
 		&cli.StringFlag{
+			Name:  "create-root-command",
+			Usage: "Command to run when creating root",
+		},
+		&cli.StringFlag{
 			Name:  "ref",
 			Usage: "Specify an alternate image name.",
 		},
@@ -81,6 +85,6 @@ var buildCommand = &cli.Command{
 			return err
 		}
 
-		return nix2container.Export(ctx, store, img, ref, f)
+		return nix2container.Export(ctx, store, img, ref, f, c.String("create-root-command"))
 	},
 }

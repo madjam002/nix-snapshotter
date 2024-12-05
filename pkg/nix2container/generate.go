@@ -10,11 +10,12 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"syscall"
-	"time"
+	// "time"
 
 	"github.com/containerd/containerd/archive"
 	"github.com/containerd/containerd/archive/compression"
@@ -49,7 +50,7 @@ func TempDir() string {
 
 // Generate adds a nix-snapshotter container image to store and returns its
 // descriptor.
-func Generate(ctx context.Context, image *types.Image, store content.Store) (desc ocispec.Descriptor, err error) {
+func Generate(ctx context.Context, image *types.Image, store content.Store, createRootCommand string) (desc ocispec.Descriptor, err error) {
 	// Initialize the manifest and manifest config from its base image.
 	var (
 		mfst ocispec.Manifest
@@ -62,7 +63,7 @@ func Generate(ctx context.Context, image *types.Image, store content.Store) (des
 
 	// Generate and add layer to store.
 	buf := new(bytes.Buffer)
-	diffID, err := writeNixClosureLayer(ctx, buf, image.NixStorePaths, image.CopyToRoots)
+	diffID, err := writeNixClosureLayer(ctx, buf, image.NixStorePaths, image.CopyToRoots, createRootCommand)
 	if err != nil {
 		return
 	}
@@ -239,7 +240,7 @@ func parseOCITarball(ctx context.Context, store content.Store, tarballPath strin
 // Each store path in copyToRoots will also be walked to generate symlinks
 // relative to root. Note that these symlinks will be broken until the
 // containerd-shim finally mounts what nix-snapshotter has generated.
-func writeNixClosureLayer(ctx context.Context, w io.Writer, nixStorePaths, copyToRoots []string) (digest.Digest, error) {
+func writeNixClosureLayer(ctx context.Context, w io.Writer, nixStorePaths, copyToRoots []string, createRootCommand string) (digest.Digest, error) {
 	root, err := os.MkdirTemp(TempDir(), "nix2container-closure")
 	if err != nil {
 		return "", fmt.Errorf("failed to create temp dir: %w", err)
@@ -297,6 +298,17 @@ func writeNixClosureLayer(ctx context.Context, w io.Writer, nixStorePaths, copyT
 			return "", err
 		}
 	}
+
+	if createRootCommand != "" {
+		cmd := exec.Command(createRootCommand)
+		cmd.Dir = root
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		if err := cmd.Run(); err != nil {
+			return "", err
+		}
+	}
+
 	return tarDir(ctx, w, root, true)
 }
 
@@ -312,7 +324,7 @@ func tarDir(ctx context.Context, w io.Writer, root string, gzip bool) (digest.Di
 	// Set upper bound for timestamps to be epoch 0 for reproducibility.
 
 	opts := []archive.ChangeWriterOpt{
-		archive.WithModTimeUpperBound(time.Time{}),
+		// archive.WithModTimeUpperBound(time.Time{}),
 	}
 	dgstr := digest.SHA256.Digester()
 	cw := archive.NewChangeWriter(io.MultiWriter(w, dgstr.Hash()), root, opts...)

@@ -5,6 +5,7 @@
 , runCommand
 , writeShellScriptBin
 , writeText
+, writers
 }:
 
 let
@@ -48,6 +49,8 @@ let
     # root. The store path prefix /nix/store/hash-path is removed. The
     # store path content is then located at the image /.
     copyToRoot ? null,
+    # ADDED - run commands when building root
+    createRootCommand ? null,
     # An attribute set describing an image configuration as defined in:
     # https://github.com/opencontainers/image-spec/blob/8b9d41f48198a7d6d0a5c1a12dc2d1f7f47fc97f/specs-go/v1/config.go#L23
     config ? {},
@@ -91,6 +94,7 @@ let
             --config "${configFile}" \
             --closure "${runtimeClosureInfo}/store-paths" \
             --copy-to-root "${copyToRootFile}" \
+            --create-root-command "${if createRootCommand != null then writers.writeDash "create-image-root" createRootCommand else ""}" \
             ${refFlag} \
             ${fromImageFlag} \
             $out
